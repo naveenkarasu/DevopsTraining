@@ -31,7 +31,7 @@ jobs:
 
       - name: Build JAR with Maven
         run: mvn clean package -DskipTests
-        working-directory: ./DevopsTraining
+        #working-directory: ./DevopsTraining
 
       - name: Run OWASP Dependency-Check
         uses: dependency-check/Dependency-Check_Action@main
@@ -44,7 +44,7 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build -t tora-app:latest .
-        working-directory: ./DevopsTraining
+      #  working-directory: ./DevopsTraining
 
       # Optional: Save report as an artifact
       - name: Upload Dependency Report
