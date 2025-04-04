@@ -34,6 +34,8 @@ jobs:
 
       - name: Run OWASP Dependency-Check using Docker
         run: |
+          mkdir -p dependency-check-report
+          
           docker run --rm \
             -v $(pwd):/src \
             owasp/dependency-check \
