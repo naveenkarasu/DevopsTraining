@@ -41,7 +41,7 @@ jobs:
             owasp/dependency-check \
             --project "Tora" \
             --scan /src \
-            --format "ALL" \
+            --format "HTML" \
             --out /src/dependency-check-report \
             --failOnCVSS 11
 
