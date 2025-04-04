@@ -39,17 +39,20 @@ jobs:
             owasp/dependency-check \
             --project "Tora" \
             --scan /src \
-            --format "HTML" \
+            --format "ALL" \
             --out /src/dependency-check-report \
             --failOnCVSS 11
 
-          echo "Listing report directory..."
-          ls -l dependency-check-report || true
+          echo "✅ Listing dependency-check-report directory:"
+          ls -lh dependency-check-report || true
 
+          echo "✅ Files in report folder:"
+          find dependency-check-report -type f || true
+ 
           if [ -f dependency-check-report/dependency-check-report.html ]; then
-            echo "✅ Report successfully generated!"
+            echo "✅ HTML report exists!"
           else
-            echo "❌ Report not found!"
+            echo "❌ HTML report NOT found!"
           fi
         continue-on-error: true
   
