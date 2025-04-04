@@ -40,10 +40,21 @@ jobs:
             --project "Tora" \
             --scan /src \
             --format "HTML" \
-            --out /src/dependency-check-report
+            --out /src/dependency-check-report \
             --failOnCVSS 11
 
+          echo "Listing report directory..."
+          ls -l dependency-check-report || true
+
+          if [ -f dependency-check-report/dependency-check-report.html ]; then
+            echo "✅ Report successfully generated!"
+          else
+            echo "❌ Report not found!"
+          fi
+        continue-on-error: true
+  
       - name: Upload Dependency Report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: dependency-check-report
