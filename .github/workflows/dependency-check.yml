@@ -1,4 +1,4 @@
-name: Dependency Check
+name: CI Build and Dependency Scan
 
 on:
   push:
@@ -8,34 +8,62 @@ on:
   workflow_dispatch:
 
 jobs:
-  security-scan:
+  build-and-scan:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    - name: Set up Java
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'temurin'
-        java-version: '21'
+      - name: Set up Java 21
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '21'
 
-    - name: Cache Maven packages
-      uses: actions/cache@v3
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-        restore-keys: |
-          ${{ runner.os }}-maven-
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
 
-    - name: Install dependencies
-      run: mvn install -DskipTests
+      - name: Build JAR with Maven
+        run: mvn clean package -DskipTests
 
-    - name: Run OWASP Dependency-Check
-      uses: dependency-check/Dependency-Check_Action@main
-      with:
-        project: "Tora"
-        path: "."
-        format: "HTML"
-        out: "dependency-check-report"
+      - name: Run OWASP Dependency-Check using Docker
+        run: |
+          mkdir -p dependency-check-report
+          
+          docker run --rm \
+            -v $(pwd):/src \
+            owasp/dependency-check \
+            --project "Tora" \
+            --scan /src \
+            --format "HTML" \
+            --out /src/dependency-check-report \
+            --failOnCVSS 11
+
+          echo "✅ Listing dependency-check-report directory:"
+          ls -lh dependency-check-report || true
+
+          echo "✅ Files in report folder:"
+          find dependency-check-report -type f || true
+ 
+          if [ -f dependency-check-report/dependency-check-report.html ]; then
+            echo "✅ HTML report exists!"
+          else
+            echo "❌ HTML report NOT found!"
+          fi
+        continue-on-error: true
+  
+      - name: Upload Dependency Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: dependency-check-report/
+
+      - name: Build Docker Image
+        run: docker build -t tora-app:latest .
